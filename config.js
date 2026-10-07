@@ -12,7 +12,7 @@
 */
 
 const CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
-  TEACHER_ACCESS_CODE: "CHANGE-ME"
+  SUPABASE_URL: "https://gtlxdisqkdcxkzzapelt.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_-er6kNjdnLq14gp0HuqbGg_31aKNian",
+  TEACHER_ACCESS_CODE: "g2r2rocks"
 };
