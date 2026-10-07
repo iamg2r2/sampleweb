@@ -1,49 +1,47 @@
-# 🐞 Bug Buster
+# Bug Buster V2
 
-A lightweight, GitHub Pages-friendly debugging game for Computer Science students.
+## What changed
+- Separate `teacher.html` dashboard.
+- Students can click numbered questions to jump to any bug.
+- Previous/Next navigation.
+- Answered questions are marked green.
+- Returning to a question preserves its answer and score state.
+- Finish Quiz button asks before submitting if questions remain unanswered.
+- Teacher dashboard searches register numbers and downloads CSV.
 
-## Features
+## GitHub Pages
+Upload all files to the repository root. Set **Settings → Pages → Source → GitHub Actions**.
 
-- Cartoon/pastel learning UI
-- Student enters register number
-- Debugging challenges
-- Immediate feedback
-- Manual **Next Bug →** button — no automatic advance
-- Score calculation
-- Teacher dashboard
-- CSV marks download
-- Supabase online storage
-- Works in demo/local mode before Supabase is configured
+Use this workflow:
 
-## 1. Upload to GitHub
+```yaml
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: '.'
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
 
-Create a GitHub repository, for example:
-
-`bug-buster`
-
-Upload these files:
-
-- `index.html`
-- `style.css`
-- `app.js`
-- `config.js`
-- `README.md`
-
-Then go to:
-
-**Repository → Settings → Pages → Deploy from branch → main → /root**
-
-Your website will be available at:
-
-`https://YOUR-USERNAME.github.io/bug-buster/`
-
-## 2. Set up Supabase
-
-Create a free project at:
-
-https://supabase.com/
-
-Open **SQL Editor** and run:
+## Supabase
+Create a table:
 
 ```sql
 create table public.bug_buster_results (
@@ -60,90 +58,27 @@ create table public.bug_buster_results (
 alter table public.bug_buster_results enable row level security;
 
 create policy "allow student result insert"
-on public.bug_buster_results
-for insert
-to anon
-with check (
-  register_number is not null
-  and length(register_number) between 4 and 20
-  and score >= 0
-  and max_score > 0
-);
+on public.bug_buster_results for insert to anon
+with check (register_number is not null and length(register_number) between 4 and 20 and score >= 0 and max_score > 0);
 
-create policy "allow public result read"
-on public.bug_buster_results
-for select
-to anon
-using (true);
+create policy "allow result read"
+on public.bug_buster_results for select to anon using (true);
 ```
 
-### Important security note
-
-The above read policy is intentionally simple for this prototype. It means the browser can read the results table if someone knows how to inspect the site.
-
-For an actual assessment, **do not use a public SELECT policy**. A better production design is:
-
-Student submits → database/function records result → teacher uses a protected server-side/admin mechanism to retrieve marks.
-
-Do NOT put the Supabase `service_role` key in `config.js`.
-
-## 3. Connect Supabase
-
-Open `config.js`:
+Then edit `config.js`:
 
 ```js
-const CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
-  TEACHER_ACCESS_CODE: "CHANGE-ME"
+const CONFIG={
+  SUPABASE_URL:"YOUR_PROJECT_URL",
+  SUPABASE_ANON_KEY:"YOUR_PUBLISHABLE_OR_ANON_KEY",
+  TEACHER_ACCESS_CODE:"YOUR_TEACHER_CODE"
 };
 ```
 
-Replace the first two values with your Supabase project URL and publishable/anon key.
+Do not put a Supabase service-role key in the repository.
 
-Change:
+Student URL: `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/`
 
-```js
-TEACHER_ACCESS_CODE: "CHANGE-ME"
-```
+Teacher URL: `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/teacher.html`
 
-to your own temporary teacher code.
-
-Again: this frontend access code is **not real security**. It is only a prototype gate.
-
-## 4. Test before publishing
-
-If you do not configure Supabase, the app still works.
-
-Results will be saved in the browser's local storage. This is useful for testing the game.
-
-Once Supabase is configured, results are stored online.
-
-## 5. CSV
-
-Teacher Dashboard → **Download Marks CSV**
-
-The downloaded file contains:
-
-- Register Number
-- Score
-- Max Score
-- Percentage
-- Attempt
-- Date
-
-## Recommended next development
-
-For a real college deployment, I recommend adding:
-
-1. Teacher authentication through Supabase Auth
-2. A separate teacher dashboard URL
-3. Quiz/class selection
-4. Question bank with randomized questions
-5. Attempt limits
-6. Student answer history
-7. Challenge-wise analytics
-8. Duplicate/retake handling
-9. Export to Excel as well as CSV
-10. Moodle integration later if required
-
+The teacher code in `config.js` is only a frontend gate. For real assessment data, use Supabase Auth/server-side protection before production.
